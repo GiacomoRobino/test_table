@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, filter, map, Observable, pipe } from 'rxjs';
+import { BehaviorSubject, filter, map, Observable, pipe, catchError, throwError } from 'rxjs';
 import { Record } from 'src/app/models/record';
 import { PaginationService } from '../pagination-service/pagination.service';
 
@@ -13,6 +13,7 @@ export class DataService {
   private deletedRecords: Array<any> = [];
   private newRecords: Array<any> = [];
   private filterValue: (arg: Record) => boolean = (record: Record) => true;
+  public error = new BehaviorSubject<boolean>(false);
 
   private dataSource: BehaviorSubject<Array<Record>> = new BehaviorSubject<Array<Record>>([]);
   private dataStream = new BehaviorSubject(this.dataSource.getValue());
@@ -22,7 +23,12 @@ export class DataService {
   
 
   getData(){
-    this.http.get<any>(this.targetUrl).pipe(this.parseResponse(), this.parseResponseBody(), this.applyFilter()).subscribe((dataList: any) => this.dataSource.next(dataList));
+    this.http.get<any>(this.targetUrl).pipe(this.parseResponse(), this.parseResponseBody(), this.applyFilter(), catchError(err => {
+      console.log('Handling error locally and rethrowing it...', err);
+      this.error.next(true);
+      return throwError(err);
+  }))
+      .subscribe((dataList: any) => this.dataSource.next(dataList));
   }
 
   getDataStream(): Observable<Array<Record>> {

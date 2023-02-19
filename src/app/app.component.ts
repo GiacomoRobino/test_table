@@ -9,10 +9,9 @@ import { DataService } from './services/data-service/data.service';
 })
 export class AppComponent implements OnInit{
   title = 'test';
-  dataSource$ !: Observable<any>;
+  public errorSource!: Observable<boolean>;
   constructor(public dataService: DataService){}
   ngOnInit(){
-    this.dataSource$ = this.dataService.getDataStream();
-    this.dataService.getData();
+    this.errorSource = this.dataService.error;
   }
 }
